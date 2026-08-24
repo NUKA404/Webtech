@@ -1,0 +1,43 @@
+name: Deploy Content Desk
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'content-desk/**'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: pages
+  cancel-in-progress: true
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+          cache-dependency-path: content-desk/package.json
+      - name: Install dependencies
+        working-directory: content-desk
+        run: npm install
+      - name: Build
+        working-directory: content-desk
+        run: npm run build
+      - name: Configure Pages
+        uses: actions/configure-pages@v5
+      - name: Upload artifact
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: content-desk/dist
+      - name: Deploy to Pages
+        id: deployment
+        uses: actions/deploy-pages@v4
